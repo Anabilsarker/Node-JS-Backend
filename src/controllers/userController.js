@@ -1,9 +1,9 @@
-const userModel = require('../models/userModel');
+const { userModel } = require('../models/userModel');
 
 const userController = {
     getUsers: async (req, res) => {
         try {
-            const users = await userModel.findAll();
+            const users = await db.query(userModel.findAll);
             res.status(200).json(users);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -13,9 +13,9 @@ const userController = {
 
     getUser: async (req, res) => {
         try {
-            const user = await userModel.findById(parseInt(req.params.id));
-            if (user) {
-                res.status(200).json(user);
+            const user = await db.query(userModel.findById, [parseInt(req.params.id)]);
+            if (user[0]) {
+                res.status(200).json(user[0]);
             } else {
                 res.status(404).send('User not found');
             }
@@ -27,8 +27,8 @@ const userController = {
 
     createUser: async (req, res) => {
         try {
-            const newUser = await userModel.create(req.body);
-            res.status(201).json(newUser);
+            const newUser = await db.query(userModel.create, req.body);
+            res.status(201).json({ id: newUser.insertId, ...req.body });
         } catch (err) {
             console.error('Error adding user:', err);
             res.status(500).send({ message: 'Error adding user' });
@@ -37,9 +37,9 @@ const userController = {
 
     updateUser: async (req, res) => {
         try {
-            const updatedUser = await userModel.update(parseInt(req.params.id), req.body);
+            const updatedUser = await db.query(userModel.update, [parseInt(req.params.id), req.body]);
             if (updatedUser) {
-                res.status(200).json(updatedUser);
+                res.status(200).json({ id, ...updatedUser });
             } else {
                 res.status(404).send('User not found');
             }
@@ -51,9 +51,9 @@ const userController = {
 
     deleteUser: async (req, res) => {
         try {
-            const user = await userModel.remove(parseInt(req.params.id));
+            const user = await db.query(userModel.delete, [parseInt(req.params.id)]);
             if (user) {
-                res.status(200).json(user);
+                res.status(200).json({ user, message: 'User deleted successfully' });
             } else {
                 res.status(404).send('User not found');
             }
